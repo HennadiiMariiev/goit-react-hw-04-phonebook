@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import Form from './components/Form/Form';
 import Contacts from './components/Contacts/Contacts';
 import Filter from './components/Filter/Filter';
@@ -11,134 +11,100 @@ import hardCodedContacts from './data/hardCodedContacts';
 
 import 'react-toastify/dist/ReactToastify.css';
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      contacts: [],
-      filter: '',
-      isHardCodedContactsUsed: false,
-    };
-  }
+function App() {
+  const [contacts, setContacts] = useState([]);
+  const [filter, setFilter] = useState('');
+  const [isHardCodedContactsUsed, setIsHardCodedContactsUsed] = useState(false);
 
   //#region class methods
-
-  componentDidMount() {
+  useEffect(() => {
     const contactsFromLocalStorage = JSON.parse(localStorage.getItem('contacts'));
 
     if (contactsFromLocalStorage) {
-      this.setState({
-        isHardCodedContactsUsed: contactsFromLocalStorage.some((contactEl) => !hardCodedContacts.includes(contactEl)),
-        contacts: contactsFromLocalStorage,
-      });
+      setContacts([...contactsFromLocalStorage]);
+      setIsHardCodedContactsUsed(contactsFromLocalStorage.some((contactEl) => !hardCodedContacts.includes(contactEl)));
     }
-  }
+  }, []);
 
-  componentDidUpdate() {
-    localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-  }
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  isNameInContacts = (searchName) => {
-    return this.state.contacts.find(({ name }) => name === searchName);
+  const isNameInContacts = (searchName) => {
+    return contacts.find(({ name }) => name === searchName);
   };
 
-  isContactAdded = (bool) => bool;
+  const isContactAdded = (bool) => bool;
 
-  addContact = (name, number) => {
-    if (this.isNameInContacts(name)) {
+  const addContact = (name, number) => {
+    if (isNameInContacts(name)) {
       const existContactMessage = (name) => toast.warn(`There is an existing contact with name "${name}"!`);
       existContactMessage(name);
 
-      return this.isContactAdded(false);
+      return isContactAdded(false);
     }
 
     const id = uuidv4();
 
-    this.setState({
-      contacts: [...this.state.contacts, { id, name, number }],
-    });
+    setContacts([...contacts, { id, name, number }]);
 
     const addedContactMessage = (name) => toast.success(`New contact "${name}" was added!`);
     addedContactMessage(name);
 
-    return this.isContactAdded(true);
+    return isContactAdded(true);
   };
 
-  deleteContact = (event) => {
+  const deleteContact = (event) => {
     const id = event.target.value;
 
-    this.setState({
-      filter: '',
-      contacts: [
-        ...this.state.contacts.filter((contact) => {
-          return contact.id !== id;
-        }),
-      ],
-    });
+    setFilter('');
+    setContacts(contacts.filter((contact) => contact.id !== id));
   };
 
-  deleteAll = () => {
-    this.setState({
-      contacts: [],
-      isHardCodedContactsUsed: !this.state.isHardCodedContactsUsed,
-    });
+  const deleteAll = () => {
+    setContacts([]);
+    setIsHardCodedContactsUsed(!isHardCodedContactsUsed);
   };
 
-  onFilterChange = (event) => {
-    this.setState({
-      filter: event.target.value,
-    });
+  const onFilterChange = (event) => {
+    setFilter(event.target.value);
   };
 
-  getHardCodedContacts = () => {
-    this.state.isHardCodedContactsUsed
-      ? this.setState({
-          contacts: this.state.contacts.filter((contactEl) => !hardCodedContacts.includes(contactEl)),
-          isHardCodedContactsUsed: !this.state.isHardCodedContactsUsed,
-        })
-      : this.setState({
-          contacts: [...this.state.contacts, ...hardCodedContacts],
-          isHardCodedContactsUsed: !this.state.isHardCodedContactsUsed,
-        });
+  const getHardCodedContacts = () => {
+    isHardCodedContactsUsed
+      ? setContacts(contacts.filter((contactEl) => !hardCodedContacts.includes(contactEl)))
+      : setContacts([...contacts, ...hardCodedContacts]);
+
+    setIsHardCodedContactsUsed(!isHardCodedContactsUsed);
   };
 
-  filterContacts = () => {
-    if (this.state.filter === '') {
-      return this.state.contacts;
+  const filterContacts = () => {
+    if (filter === '') {
+      return contacts;
     }
 
-    const searchStr = this.state.filter.toLowerCase();
+    const searchStr = filter.toLowerCase();
 
-    return this.state.contacts.filter((contact) => contact.name.toLowerCase().includes(searchStr));
+    return contacts.filter((contact) => contact.name.toLowerCase().includes(searchStr));
   };
 
   //#endregion
-
-  render() {
-    const contacts = this.filterContacts();
-
-    return (
-      <StyledApp>
-        <Form onNewContactAdd={this.addContact}></Form>
-        <HardCodeContactsCheckbox
-          onHardCodedCheckboxChange={this.getHardCodedContacts}
-          isHardCodedContactsUsed={this.state.isHardCodedContactsUsed}
-        />
-        <Filter
-          onFilterChange={this.onFilterChange}
-          value={this.state.filter}
-          disabled={this.state.contacts.length ? false : true}
-        />
-        {contacts.length === 0 ? (
-          <StyledBanner>No contacts...</StyledBanner>
-        ) : (
-          <Contacts contacts={contacts} deleteContact={this.deleteContact} deleteAll={this.deleteAll} />
-        )}
-        <ToastContainer />
-      </StyledApp>
-    );
-  }
+  return (
+    <StyledApp>
+      <Form onNewContactAdd={addContact}></Form>
+      <HardCodeContactsCheckbox
+        onHardCodedCheckboxChange={getHardCodedContacts}
+        isHardCodedContactsUsed={isHardCodedContactsUsed}
+      />
+      <Filter onFilterChange={onFilterChange} value={filter} disabled={contacts.length ? false : true} />
+      {contacts.length === 0 ? (
+        <StyledBanner>No contacts...</StyledBanner>
+      ) : (
+        <Contacts contacts={filterContacts()} deleteContact={deleteContact} deleteAll={deleteAll} />
+      )}
+      <ToastContainer />
+    </StyledApp>
+  );
 }
 
 export default App;

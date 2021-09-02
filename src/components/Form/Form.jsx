@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -9,99 +9,93 @@ import {
   StyledButton as StyledPrimaryButton,
 } from './StyledFormComponents';
 
-class Form extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      name: '',
-      number: '',
-    };
-  }
+function Form({ onNewContactAdd }) {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
 
   //#region class methods
 
-  isValidInput = (event) => {
+  const isValidInput = (event) => {
     if (event.target.value.match(event.target.pattern) === null && event.target.value.length !== 0) {
       return false;
     }
     return true;
   };
 
-  colorizeInputOnValidation = (event) => {
-    if (!this.isValidInput(event)) {
+  const colorizeInputOnValidation = (event) => {
+    if (!isValidInput(event)) {
       event.target.style = 'background-color: #f7d7d7;';
     } else {
       event.target.style = 'background-color: transparent;';
     }
   };
 
-  onInputChange = (event) => {
-    this.colorizeInputOnValidation(event);
+  const onInputChange = (event) => {
+    colorizeInputOnValidation(event);
 
-    const inputName = event.target.name;
-    const inputValue = event.target.value;
-
-    this.setState({ [inputName]: inputValue });
+    switch (event.target.name) {
+      case 'name':
+        setName(event.target.value);
+        break;
+      case 'number':
+        setNumber(event.target.value);
+        break;
+      default:
+        return;
+    }
   };
 
-  clearInputs = () => {
-    this.setState({
-      name: '',
-      number: '',
-    });
+  const clearInputs = () => {
+    setName('');
+    setNumber('');
   };
 
-  submitNewContact = (event) => {
+  const submitNewContact = (event) => {
     event.preventDefault();
 
-    const name = this.state.name;
-    const number = this.state.number;
-    const isContactAdded = this.props.onNewContactAdd(name, number);
+    const isContactAdded = onNewContactAdd(name, number);
 
     if (isContactAdded) {
-      this.clearInputs();
+      clearInputs();
     }
   };
 
   //#endregion
 
-  render() {
-    return (
-      <>
-        <StyledTitle>Phonebook</StyledTitle>
-        <StyledForm onSubmit={this.submitNewContact}>
-          <StyledLable>
-            Name
-            <StyledInput
-              type="text"
-              name="name"
-              pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-              title="Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
-              placeholder="Please, type contact name"
-              required
-              value={this.state.name}
-              onChange={this.onInputChange}
-            />
-          </StyledLable>
-          <StyledLable>
-            Number
-            <StyledInput
-              type="tel"
-              name="number"
-              pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-              title="Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +"
-              placeholder="Please, type contact number"
-              required
-              value={this.state.number}
-              onChange={this.onInputChange}
-            />
-          </StyledLable>
-          <StyledPrimaryButton type="submit">Add contact</StyledPrimaryButton>
-        </StyledForm>
-      </>
-    );
-  }
+  return (
+    <>
+      <StyledTitle>Phonebook</StyledTitle>
+      <StyledForm onSubmit={submitNewContact}>
+        <StyledLable>
+          Name
+          <StyledInput
+            type="text"
+            name="name"
+            pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
+            title="Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
+            placeholder="Please, type contact name"
+            required
+            value={name}
+            onChange={onInputChange}
+          />
+        </StyledLable>
+        <StyledLable>
+          Number
+          <StyledInput
+            type="tel"
+            name="number"
+            pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
+            title="Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +"
+            placeholder="Please, type contact number"
+            required
+            value={number}
+            onChange={onInputChange}
+          />
+        </StyledLable>
+        <StyledPrimaryButton type="submit">Add contact</StyledPrimaryButton>
+      </StyledForm>
+    </>
+  );
 }
 
 Form.propTypes = {

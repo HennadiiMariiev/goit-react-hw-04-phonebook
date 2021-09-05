@@ -2,19 +2,15 @@ import { useState, useEffect } from 'react';
 import Form from './components/Form/Form';
 import Contacts from './components/Contacts/Contacts';
 import Filter from './components/Filter/Filter';
-import HardCodeContactsCheckbox from './components/HardCodeCheckbox/HardCodeCheckbox';
 import { ToastContainer, toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import { StyledApp, StyledBanner } from './components/AppComponents/AppComponents';
-
-import hardCodedContacts from './data/hardCodedContacts';
 
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   const [contacts, setContacts] = useState([]);
   const [filter, setFilter] = useState('');
-  const [isHardCodedContactsUsed, setIsHardCodedContactsUsed] = useState(false);
 
   //#region class methods
   useEffect(() => {
@@ -22,7 +18,6 @@ function App() {
 
     if (contactsFromLocalStorage) {
       setContacts([...contactsFromLocalStorage]);
-      setIsHardCodedContactsUsed(contactsFromLocalStorage.some((contactEl) => !hardCodedContacts.includes(contactEl)));
     }
   }, []);
 
@@ -58,24 +53,7 @@ function App() {
     const id = event.target.value;
 
     setFilter('');
-    setContacts(contacts.filter((contact) => contact.id !== id));
-  };
-
-  const deleteAll = () => {
-    setContacts([]);
-    setIsHardCodedContactsUsed(!isHardCodedContactsUsed);
-  };
-
-  const onFilterChange = (event) => {
-    setFilter(event.target.value);
-  };
-
-  const getHardCodedContacts = () => {
-    isHardCodedContactsUsed
-      ? setContacts(contacts.filter((contactEl) => !hardCodedContacts.includes(contactEl)))
-      : setContacts([...contacts, ...hardCodedContacts]);
-
-    setIsHardCodedContactsUsed(!isHardCodedContactsUsed);
+    setContacts((contacts) => contacts.filter((contact) => contact.id !== id));
   };
 
   const filterContacts = () => {
@@ -92,15 +70,15 @@ function App() {
   return (
     <StyledApp>
       <Form onNewContactAdd={addContact}></Form>
-      <HardCodeContactsCheckbox
-        onHardCodedCheckboxChange={getHardCodedContacts}
-        isHardCodedContactsUsed={isHardCodedContactsUsed}
+      <Filter
+        onFilterChange={(e) => setFilter(e.target.value)}
+        value={filter}
+        disabled={contacts.length ? false : true}
       />
-      <Filter onFilterChange={onFilterChange} value={filter} disabled={contacts.length ? false : true} />
       {contacts.length === 0 ? (
         <StyledBanner>No contacts...</StyledBanner>
       ) : (
-        <Contacts contacts={filterContacts()} deleteContact={deleteContact} deleteAll={deleteAll} />
+        <Contacts contacts={filterContacts()} deleteContact={deleteContact} deleteAll={() => setContacts([])} />
       )}
       <ToastContainer />
     </StyledApp>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 
 import {
@@ -9,30 +9,36 @@ import {
   StyledButton as StyledPrimaryButton,
 } from './StyledFormComponents';
 
+const useInput = (input) => {
+  const [value, setValue] = useState(() => '');
+
+  useEffect(() => {
+    function isValidInput(input) {
+      if (!input.value.match(input.pattern) && input.value.length) return false;
+
+      return true;
+    }
+
+    if (!isValidInput(input.current)) {
+      input.current.style = 'background-color: #f7d7d7;';
+    } else {
+      input.current.style = 'background-color: transparent;';
+    }
+  }, [value, input]);
+
+  return [value, setValue];
+};
+
 function Form({ onNewContactAdd }) {
-  const [name, setName] = useState('');
-  const [number, setNumber] = useState('');
+  const nameInput = useRef();
+  const numberInput = useRef();
+
+  const [name, setName] = useInput(nameInput);
+  const [number, setNumber] = useInput(numberInput);
 
   //#region class methods
 
-  const isValidInput = (event) => {
-    if (event.target.value.match(event.target.pattern) === null && event.target.value.length !== 0) {
-      return false;
-    }
-    return true;
-  };
-
-  const colorizeInputOnValidation = (event) => {
-    if (!isValidInput(event)) {
-      event.target.style = 'background-color: #f7d7d7;';
-    } else {
-      event.target.style = 'background-color: transparent;';
-    }
-  };
-
   const onInputChange = (event) => {
-    colorizeInputOnValidation(event);
-
     switch (event.target.name) {
       case 'name':
         setName(event.target.value);
@@ -76,6 +82,7 @@ function Form({ onNewContactAdd }) {
             placeholder="Please, type contact name"
             required
             value={name}
+            ref={nameInput}
             onChange={onInputChange}
           />
         </StyledLable>
@@ -89,6 +96,7 @@ function Form({ onNewContactAdd }) {
             placeholder="Please, type contact number"
             required
             value={number}
+            ref={numberInput}
             onChange={onInputChange}
           />
         </StyledLable>
